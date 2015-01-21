@@ -19,8 +19,10 @@ def init():
 
 class Game:
     def __init__(self):
-        self.pos = [320, 240]
+        self.pos = [(WIDTH - SHIPSIZE) / 2, HEIGHT - SHIPSIZE]
         self.speed = 5
+        
+        document.body.onkeydown = self.keypress
 
     def main(self):
         SCREEN.width = WIDTH
@@ -36,6 +38,10 @@ class Game:
             self.pos[0] = 0
         
         timer.set_timeout(self.main, 30)
+    
+    def keypress(self, event):
+        print(event, event.keyCode)
+        
 
 init()
 # menu()

@@ -1,8 +1,7 @@
-
+import random
 
 from browser import document, html, timer
 
-import time 
 
 SIZE = WIDTH, HEIGHT = 640, 480
 SCREEN = None
@@ -11,6 +10,7 @@ SHIPSIZE = 30
 
 SHIPCOLOR = "#0fd"
 SHOTCOLOR = "#d00"
+ENEMYCOLOR = "#fff"
 
 K_LEFT = 37
 K_RIGHT = 39
@@ -27,29 +27,93 @@ def init():
     document.body.append(SCREEN)
     CTX = SCREEN.getContext("2d")
 
+def gameover():
+    global game
+    document.get(selector="h1")[0].text= "Game Over"
 
 
-class Shot:
-    def __init__(self, pos):
-        self.pos = [pos[0] - SHIPSIZE / 8, pos[1] - SHIPSIZE]
-        self.speed = -10
+class GameObject:
+    def __init__(self, pos=None):
+        self.pos = pos
+        self.width = SHIPSIZE
+        self.height = SHIPSIZE
         self.update_rect()
-
-    def update_screen(self):
-        CTX.fillStyle = SHOTCOLOR
-        # call with *self.rect not working with Brython 3.0.2
-        CTX.fillRect(self.rect[0], self.rect[1], self.rect[2], self.rect[3])
 
     def update(self):
         self.update_screen()
+
+    def update_screen(self):
+        CTX.fillStyle = self.color
+        # call with *self.rect not working with Brython 3.0.2
+        CTX.fillRect(self.rect[0], self.rect[1], self.rect[2], self.rect[3])
+
+    def update_rect(self):
+        self.rect = (self.pos[0], self.pos[1], self.width, self.height)
+
+    def intersect(self, other):
+        left = self.rect[0]
+        right = left + self.rect[2]
+        top = self.rect[1]
+        botton = self.rect[1] + self.rect[3]
+        if ( (left >= other.rect[0] and left <= other.rect[0] + other.rect[2] or
+              right >= other.rect[0] and right <= other.rect[0] + other.rect[2] or
+              left <= other.rect[0] and right >= other.rect[0]) and
+            
+              (top >= other.rect[1] and top <= other.rect[1] + other.rect[3] or
+               botton >= other.rect[1] and botton <= other.rect[1] + other.rect[3] or
+               top <= other.rect[1]  and botton >= other.rect[1])
+         ):
+            return True
+        return False
+
+
+class Shot(GameObject):
+    def __init__(self, pos):
+        pos = [pos[0] - SHIPSIZE / 8, pos[1] - SHIPSIZE]
+        self.speed = -10
+        self.color = SHOTCOLOR
+        super(Shot, self).__init__(pos)
+        self.width = SHIPSIZE / 4
+        self.update_rect()
+
+
+    def update(self):
+        super(Shot, self).update()
         self.pos[1] += self.speed
         if self.pos[1] <= 0:
             return False
         self.update_rect()
         return True
 
-    def update_rect(self):
-        self.rect = (self.pos[0], self.pos[1], SHIPSIZE / 4, SHIPSIZE)
+    def hit_any_enemy(self, enemy_list):
+        finished = []
+        for i, enemy in enumerate(enemy_list):
+            if self.intersect(enemy):
+                finished.append(i)
+                enemy.die()
+        for i in reversed(finished):
+            del enemy_list[i]
+
+
+class Enemy(GameObject):
+    def __init__(self, pos):
+        self.speed = 5
+        self.color = ENEMYCOLOR
+        super(Enemy, self).__init__(pos)
+
+    def update(self):
+        super(Enemy, self).update()
+        self.pos[0] += self.speed
+        if self.pos[0] + self.width > WIDTH or self.pos[0] < 0:
+            self.speed = -self.speed
+            self.pos[0] += self.speed
+            self.pos[1] += SHIPSIZE * 2
+        if self.pos[1] >= HEIGHT:
+            gameover()
+        self.update_rect()
+
+    def die(self):
+        print("Ouch")
 
 class Game:
     def __init__(self):
@@ -60,6 +124,7 @@ class Game:
         self.aceleration = 0
         self.max_speed = 15
         self.shots = []
+        self.enemies = [Enemy([20,20])]
 
     def update_screen(self):
         SCREEN.width = WIDTH
@@ -90,11 +155,15 @@ class Game:
     def main(self):
         self.update_screen()
         self.movement()
+        
+        for enemy in self.enemies:
+            enemy.update()
 
         finished = []
         for i, shot in enumerate(self.shots):
             if not shot.update():
                 finished.append(i)
+            shot.hit_any_enemy(self.enemies)
 
         for i in reversed(finished):
             del self.shots[i]

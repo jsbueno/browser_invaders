@@ -15,15 +15,20 @@ def init():
     document.body.append(SCREEN)
     CTX = SCREEN.getContext("2d");
 
-def main():
-    pos = [320, 240]
-    #while True:
-        CTX.fillStyle = "green";
-        CTX.fillRect(pos[0], pos[1], SHIPSIZE, SHIPSIZE)
-        time.sleep(100) # does not work, actually
-        pos[0] += 1
+class Game:
+    def __init__(self):
+        self.pos = [320, 240]
+
+    def main(self):
+        
         SCREEN.width = WIDTH
+        CTX.fillStyle = "green";
+        CTX.fillRect(self.pos[0], self.pos[1], SHIPSIZE, SHIPSIZE)
+        self.pos[0] += 1
+        
+        timer.set_timeout(self.main, 100)
 
 init()
 # menu()
-main()
+game = Game()
+game.main()

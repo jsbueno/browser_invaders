@@ -24,7 +24,8 @@ def init():
     SCREEN = html.CANVAS(width=640, height=480)
     SCREEN.style = {"background": "black"}
     document.body.append(SCREEN)
-    CTX = SCREEN.getContext("2d");
+    CTX = SCREEN.getContext("2d")
+    
 
 class Game:
     def __init__(self):
@@ -36,12 +37,14 @@ class Game:
         
         document.body.onkeydown = self.keypress
 
-    def main(self):
+    
+    def update_screen(self):
         SCREEN.width = WIDTH
         
         CTX.fillStyle = SHIPCOLOR
         CTX.fillRect(self.pos[0], self.pos[1], SHIPSIZE, SHIPSIZE)
         
+    def movement(self):
         self.speed += self.aceleration
         if self.speed > self.max_speed:
             self.speed = self.max_speed
@@ -57,8 +60,12 @@ class Game:
         elif self.pos[0] < 0:
             self.speed = 0
             self.pos[0] = 0
-        
+
+    def main(self):
+        self.update_screen()
+        self.movement()
         timer.set_timeout(self.main, 30)
+    
     
     def keypress(self, event):
         if event.keyCode == K_RIGHT:

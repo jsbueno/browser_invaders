@@ -1,3 +1,5 @@
+
+
 from browser import document, html, timer
 
 import time 
@@ -8,6 +10,13 @@ CTX = None
 SHIPSIZE = 30
 
 SHIPCOLOR = "#0fd"
+
+K_LEFT = 37
+K_RIGHT = 39
+K_UP = 38
+K_DOWN = 40
+K_SPACE = 32
+K_ESCAPE = 27
 
 def init():
     global SCREEN, CTX
@@ -20,27 +29,44 @@ def init():
 class Game:
     def __init__(self):
         self.pos = [(WIDTH - SHIPSIZE) / 2, HEIGHT - SHIPSIZE]
-        self.speed = 5
+        self.speed = 0
+        
+        self.aceleration = 0
+        self.max_speed = 15
         
         document.body.onkeydown = self.keypress
 
     def main(self):
         SCREEN.width = WIDTH
         
-        CTX.fillStyle = SHIPCOLOR;
+        CTX.fillStyle = SHIPCOLOR
         CTX.fillRect(self.pos[0], self.pos[1], SHIPSIZE, SHIPSIZE)
+        
+        self.speed += self.aceleration
+        if self.speed > self.max_speed:
+            self.speed = self.max_speed
+        elif self.speed < -self.max_speed:
+            self.speed = - self.max_speed
+
+        self.aceleration += 1 if self.aceleration < 0 else (-1 if self.aceleration > 0 else 0)
+        
         self.pos[0] += self.speed
         if self.pos[0] > WIDTH - SHIPSIZE:
-            self.speed = - self.speed
+            self.speed = 0
             self.pos[0] = WIDTH - SHIPSIZE
         elif self.pos[0] < 0:
-            self.speed = -self.speed
+            self.speed = 0
             self.pos[0] = 0
         
         timer.set_timeout(self.main, 30)
     
     def keypress(self, event):
-        print(event, event.keyCode)
+        if event.keyCode == K_RIGHT:
+            self.aceleration += 10
+        elif event.keyCode == K_LEFT:
+            self.aceleration -= 10
+            
+        # print(event, event.keyCode)
         
 
 init()

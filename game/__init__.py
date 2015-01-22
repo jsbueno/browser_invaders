@@ -21,6 +21,9 @@ K_DOWN = 40
 K_SPACE = 32
 K_ESCAPE = 27
 
+KEYBOARD_LISTENER = None
+
+
 def init():
     global SCREEN, CTX
     document.body.append(html.H1("Space Invaders - a Python adventure"))
@@ -116,7 +119,8 @@ class Shot(GameObject):
 
 
 class Enemy(GameObject):
-    def __init__(self, pos):
+    def __init__(self, game, pos):
+        self.game = game
         self.speed = 5
         self.color = ENEMYCOLOR
         super(Enemy, self).__init__(pos)
@@ -132,15 +136,16 @@ class Enemy(GameObject):
             self.pos[0] += self.speed
             self.pos[1] += SHIPSIZE * 2
         if self.pos[1] >= HEIGHT:
-            gameover()
+            self.game.gameover()
         self.update_rect()
 
     def die(self):
-        print("Ouch")
+        self.game.score += 100
 
 
 class Ship(GameObject):
     def __init__(self, game):
+        global KEYBOARD_LISTENER
         self.game = game
         pos = [(WIDTH - SHIPSIZE) / 2, HEIGHT - SHIPSIZE]
 
@@ -152,7 +157,8 @@ class Ship(GameObject):
         self.max_speed = 15
 
         self.image = images["ship"]
-        document.body.onkeydown = self.keypress
+        KEYBOARD_LISTENER = self.keypress
+        document.body.addEventListener("keydown", KEYBOARD_LISTENER)
 
     def update(self):
         super(Ship, self).update()
@@ -186,13 +192,21 @@ class Ship(GameObject):
             self.aceleration = 0
         elif event.keyCode == K_SPACE:
             self.game.shots.append(Shot((self.pos[0] + SHIPSIZE / 2, self.pos[1])))
+        elif event.keyCode == K_ESCAPE:
+            self.game.gameover()
+    
+    def remove(self):
+        document.body.removeEventListener("keydown", KEYBOARD_LISTENER)
+
 
 class Game:
     def __init__(self):
+        self.game_over_marker = False
+        self.score = 0
 
         self.ship = Ship(self)
         self.shots = []
-        self.enemies = [Enemy([20,20])]
+        self.enemies = [Enemy(self, [20,20])]
 
     def clear_screen(self):
         SCREEN.width = WIDTH
@@ -214,7 +228,31 @@ class Game:
         for i in reversed(finished):
             del self.shots[i]
 
-        timer.set_timeout(self.main, 30)
+        if not self.game_over_marker:
+            timer.set_timeout(self.main, 30)
+        else:
+            self.display_game_over()
+
+    def display_game_over(self):
+        CTX.font = "bold 80px Sans"
+        CTX.fillStyle = SHOTCOLOR
+        message = "GAME OVER"
+        text_width = CTX.measureText(message).width
+        print("tamanho: ", text_width)
+        text_left = (WIDTH - text_width) / 2
+        text_botton = (HEIGHT / 2) + 40
+        CTX.fillText(message, text_left, text_botton)
+
+    def gameover(self):
+        self.game_over_marker = True
+        self.ship.remove()
+        document.body.onclick = self.restart
+
+    def restart(self, event):
+        # TODO: remove event listener for game restart
+        if self.game_over_marker:
+            self.__init__()
+            self.main()
 
 
 

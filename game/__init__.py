@@ -138,26 +138,25 @@ class Enemy(GameObject):
     def die(self):
         print("Ouch")
 
-class Game:
-    def __init__(self):
-        document.body.onkeydown = self.keypress
-        self.pos = [(WIDTH - SHIPSIZE) / 2, HEIGHT - SHIPSIZE]
+
+class Ship(GameObject):
+    def __init__(self, game):
+        self.game = game
+        pos = [(WIDTH - SHIPSIZE) / 2, HEIGHT - SHIPSIZE]
+
+        super(Ship, self).__init__(pos)
+
         self.speed = 0
 
         self.aceleration = 0
         self.max_speed = 15
-        self.shots = []
-        self.enemies = [Enemy([20,20])]
+
         self.image = images["ship"]
+        document.body.onkeydown = self.keypress
 
-    def update_screen(self):
-        SCREEN.width = WIDTH
+    def update(self):
+        super(Ship, self).update()
 
-        #CTX.fillStyle = SHIPCOLOR
-        CTX.drawImage(self.image, self.pos[0], self.pos[1])
-        #CTX.fillRect(self.pos[0], self.pos[1], SHIPSIZE, SHIPSIZE)
-
-    def movement(self):
         self.speed += self.aceleration
 
         self.speed *= 0.9
@@ -177,14 +176,36 @@ class Game:
             self.aceleration = self.speed = 0
             self.pos[0] = 0
 
+    def keypress(self, event):
+        if event.keyCode == K_RIGHT:
+            self.aceleration += 10
+        elif event.keyCode == K_LEFT:
+            self.aceleration -= 10
+        elif event.keyCode == K_UP:
+            self.speed = 0
+            self.aceleration = 0
+        elif event.keyCode == K_SPACE:
+            self.game.shots.append(Shot((self.pos[0] + SHIPSIZE / 2, self.pos[1])))
+
+class Game:
+    def __init__(self):
+
+        self.ship = Ship(self)
+        self.shots = []
+        self.enemies = [Enemy([20,20])]
+
+    def clear_screen(self):
+        SCREEN.width = WIDTH
+
     def main(self):
-        self.update_screen()
-        self.movement()
-        
+        self.clear_screen()
+        self.ship.update()
+
         for enemy in self.enemies:
             enemy.update()
 
         finished = []
+
         for i, shot in enumerate(self.shots):
             if not shot.update():
                 finished.append(i)
@@ -195,18 +216,9 @@ class Game:
 
         timer.set_timeout(self.main, 30)
 
-    def keypress(self, event):
-        if event.keyCode == K_RIGHT:
-            self.aceleration += 10
-        elif event.keyCode == K_LEFT:
-            self.aceleration -= 10
-        elif event.keyCode == K_UP:
-            self.speed = 0
-            self.aceleration = 0
-        elif event.keyCode == K_SPACE:
-            self.shots.append(Shot((self.pos[0] + SHIPSIZE / 2, self.pos[1])))
 
-        # print(event, event.keyCode)
+
+
 
 init()
 # menu()

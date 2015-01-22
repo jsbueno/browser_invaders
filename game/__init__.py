@@ -81,7 +81,6 @@ class GameObject:
         if ( (left >= other.rect[0] and left <= other.rect[0] + other.rect[2] or
               right >= other.rect[0] and right <= other.rect[0] + other.rect[2] or
               left <= other.rect[0] and right >= other.rect[0]) and
-            
               (top >= other.rect[1] and top <= other.rect[1] + other.rect[3] or
                botton >= other.rect[1] and botton <= other.rect[1] + other.rect[3] or
                top <= other.rect[1]  and botton >= other.rect[1])
@@ -93,7 +92,7 @@ class GameObject:
 class Shot(GameObject):
     def __init__(self, pos):
         pos = [pos[0] - SHIPSIZE / 8, pos[1] - SHIPSIZE]
-        self.speed = -10
+        self.speed = -15
         self.color = SHOTCOLOR
         super(Shot, self).__init__(pos)
         self.width = SHIPSIZE / 4
@@ -119,9 +118,9 @@ class Shot(GameObject):
 
 
 class Enemy(GameObject):
-    def __init__(self, game, pos):
+    def __init__(self, game, pos, speed=5):
         self.game = game
-        self.speed = 5
+        self.speed = speed
         self.color = ENEMYCOLOR
         super(Enemy, self).__init__(pos)
         self.image = images["enemy_01"]
@@ -154,7 +153,7 @@ class Ship(GameObject):
         self.speed = 0
 
         self.aceleration = 0
-        self.max_speed = 15
+        self.max_speed = 10
 
         self.image = images["ship"]
         KEYBOARD_LISTENER = self.keypress
@@ -184,9 +183,9 @@ class Ship(GameObject):
 
     def keypress(self, event):
         if event.keyCode == K_RIGHT:
-            self.aceleration += 10
+            self.aceleration += 5
         elif event.keyCode == K_LEFT:
-            self.aceleration -= 10
+            self.aceleration -= 5
         elif event.keyCode == K_UP:
             self.speed = 0
             self.aceleration = 0
@@ -200,16 +199,29 @@ class Ship(GameObject):
 
 
 class Game:
+    
+    high_score = 0
+    
     def __init__(self):
         self.game_over_marker = False
         self.score = 0
 
         self.ship = Ship(self)
         self.shots = []
-        self.enemies = [Enemy(self, [20,20])]
+        self.enemies = []
+        self.next_enemy_wave = self.enemy_wave_size()
+        self.populate_enemies()
+        self.scheduled_enemies = False
+
 
     def clear_screen(self):
         SCREEN.width = WIDTH
+
+    def display_score(self):
+        CTX.fillStyle = SHOTCOLOR
+        CTX.font = "bold 40px Sans"
+        CTX.fillText("%6d" % self.score, 10, 40)
+        CTX.fillText("%6d" % self.high_score, WIDTH - 200, 40)
 
     def main(self):
         self.clear_screen()
@@ -228,10 +240,46 @@ class Game:
         for i in reversed(finished):
             del self.shots[i]
 
+        if not self.enemies and not self.scheduled_enemies:
+            self.scheduled_enemies = True
+            timer.set_timeout(self.populate_enemies, 2000)
+        
+        self.display_score()
+
         if not self.game_over_marker:
             timer.set_timeout(self.main, 30)
         else:
             self.display_game_over()
+
+    def enemy_wave_size(self):
+        quantity, speed = 12, 4
+        while True:
+            yield(quantity, speed)
+            quantity += 5
+            speed += 2
+
+    def populate_enemies(self):
+        quantity, speed = next(self.next_enemy_wave)
+        enemies_per_line = 10
+        x_pos = 20
+        y_pos = 60
+        x_step = (WIDTH - 20 - SHIPSIZE) / enemies_per_line
+        enemies_current_line = 0
+        odd_line = 1
+        for i in range(quantity):
+            self.enemies.append(Enemy(self, (x_pos, y_pos), speed * odd_line))
+            print(x_pos, y_pos)
+            x_pos += x_step * odd_line
+            enemies_current_line += 1
+            if enemies_current_line >= enemies_per_line:
+                enemies_current_line = 0
+                odd_line *= -1
+                y_pos += SHIPSIZE * 2
+                x_pos = 20 if odd_line == 1 else (WIDTH - 20 - SHIPSIZE)
+                print(odd_line, x_pos)
+                
+        self.scheduled_enemies = False
+
 
     def display_game_over(self):
         CTX.font = "bold 80px Sans"
@@ -246,6 +294,8 @@ class Game:
     def gameover(self):
         self.game_over_marker = True
         self.ship.remove()
+        if self.score > self.high_score:
+            self.__class__.high_score = self.score
         document.body.onclick = self.restart
 
     def restart(self, event):

@@ -267,7 +267,7 @@ class Game:
         enemies_current_line = 0
         odd_line = 1
         for i in range(quantity):
-            self.enemies.append(Enemy(self, (x_pos, y_pos), speed * odd_line))
+            self.enemies.append(Enemy(self, [x_pos, y_pos], speed * odd_line))
             print(x_pos, y_pos)
             x_pos += x_step * odd_line
             enemies_current_line += 1

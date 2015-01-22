@@ -1,6 +1,6 @@
 import random
 
-from browser import document, html, timer
+from browser import document, html, timer, window
 
 
 SIZE = WIDTH, HEIGHT = 640, 480
@@ -11,6 +11,8 @@ SHIPSIZE = 30
 SHIPCOLOR = "#0fd"
 SHOTCOLOR = "#d00"
 ENEMYCOLOR = "#fff"
+
+images = {}
 
 K_LEFT = 37
 K_RIGHT = 39
@@ -26,6 +28,9 @@ def init():
     SCREEN.style = {"background": "black"}
     document.body.append(SCREEN)
     CTX = SCREEN.getContext("2d")
+    for image_name in "ship", "enemy_01", "enemy_02":
+        images[image_name] = html.IMG(src="/images/{}.png".format(image_name))
+        print("loaded {}.png".format(image_name))
 
 def gameover():
     global game
@@ -39,13 +44,28 @@ class GameObject:
         self.height = SHIPSIZE
         self.update_rect()
 
+        self.image_counter = 0
+        self.image_index = 0
+        # Put object animation image names in a "self.image_names" list 
+        # and the starting image object in self.image
+
     def update(self):
         self.update_screen()
 
+        self.image_counter += 1
+        if hasattr(self, "image_names") and not self.image_counter % 40:
+            self.image_index += 1
+            if self.image_index >= len(self.image_names):
+                self.image_index = 0
+            self.image = images[self.image_names[self.image_index]]
+
     def update_screen(self):
-        CTX.fillStyle = self.color
-        # call with *self.rect not working with Brython 3.0.2
-        CTX.fillRect(self.rect[0], self.rect[1], self.rect[2], self.rect[3])
+        if hasattr(self, "image"):
+            CTX.drawImage(self.image, self.pos[0], self.pos[1])
+        else:
+            CTX.fillStyle = self.color
+            # call with *self.rect not working with Brython 3.0.2
+            CTX.fillRect(self.rect[0], self.rect[1], self.rect[2], self.rect[3])
 
     def update_rect(self):
         self.rect = (self.pos[0], self.pos[1], self.width, self.height)
@@ -100,6 +120,9 @@ class Enemy(GameObject):
         self.speed = 5
         self.color = ENEMYCOLOR
         super(Enemy, self).__init__(pos)
+        self.image = images["enemy_01"]
+        self.image_names = ["enemy_01", "enemy_02"]
+
 
     def update(self):
         super(Enemy, self).update()
@@ -125,12 +148,14 @@ class Game:
         self.max_speed = 15
         self.shots = []
         self.enemies = [Enemy([20,20])]
+        self.image = images["ship"]
 
     def update_screen(self):
         SCREEN.width = WIDTH
 
-        CTX.fillStyle = SHIPCOLOR
-        CTX.fillRect(self.pos[0], self.pos[1], SHIPSIZE, SHIPSIZE)
+        #CTX.fillStyle = SHIPCOLOR
+        CTX.drawImage(self.image, self.pos[0], self.pos[1])
+        #CTX.fillRect(self.pos[0], self.pos[1], SHIPSIZE, SHIPSIZE)
 
     def movement(self):
         self.speed += self.aceleration

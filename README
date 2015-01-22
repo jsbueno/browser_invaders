@@ -1,0 +1,37 @@
+=====================
+BROWSER INVADERS
+=====================
+
+Concept vintage game using Brython - Python on Browser project
+===============================================================
+
+This is a complete game, if limited, using 
+html5's Canvas with Python script, which is translated 
+into javascript in runtime, on the client browser.
+
+How to Run 
+============
+
+Unpack the game files, and
+in the same directory, download Brython 3.0.2 or later from
+https://github.com/brython-dev/brython/releases, unpack it,
+and rename the Brython directory (in the form of Brython<version>-<date>
+for example Brython3.0.2-20150102-140610) as simply "brython".
+Then start a web server so that a browser can fetch the files
+in the local computer. 
+
+You can use "traditional" C python for this,
+typing: "python -m SimpleHTTPServer 8000" at the terminal. 
+Afterwards. point your browser to http://localhost:8000, and enjoy
+
+
+License and Copyright
+======================
+
+This game is Copyright 2015  João S. O. Bueno,
+licensed under the LGPL license V 3.0 or later (see COPYING).
+
+
+
+
+

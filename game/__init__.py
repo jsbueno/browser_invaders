@@ -26,8 +26,8 @@ KEYBOARD_LISTENER = None
 
 def init():
     global SCREEN, CTX
-    document.body.append(html.H1("Space Invaders - a Python adventure"))
-    SCREEN = html.CANVAS(width=640, height=480)
+    document.body.append(html.H1("Browser Invaders - a Python adventure"))
+    SCREEN = html.CANVAS(width=WIDTH, height=HEIGHT)
     SCREEN.style = {"background": "black"}
     document.body.append(SCREEN)
     CTX = SCREEN.getContext("2d")
@@ -150,10 +150,10 @@ class Ship(GameObject):
 
         super(Ship, self).__init__(pos)
 
+        self.aceleration = 2
         self.speed = 0
 
-        self.aceleration = 0
-        self.max_speed = 10
+        self.max_speed = 7
 
         self.image = images["ship"]
         KEYBOARD_LISTENER = self.keypress
@@ -162,46 +162,41 @@ class Ship(GameObject):
     def update(self):
         super(Ship, self).update()
 
-        self.speed += self.aceleration
-
-        self.speed *= 0.9
+        self.speed *= 0.95
 
         if self.speed > self.max_speed:
             self.speed = self.max_speed
         elif self.speed < -self.max_speed:
             self.speed = - self.max_speed
 
-        self.aceleration += 1 if self.aceleration < 0 else (-1 if self.aceleration > 0 else 0)
-
         self.pos[0] += self.speed
         if self.pos[0] > WIDTH - SHIPSIZE:
-            self.aceleration = self.speed = 0
+            self.speed = 0
             self.pos[0] = WIDTH - SHIPSIZE
         elif self.pos[0] < 0:
-            self.aceleration = self.speed = 0
+            self.speed = 0
             self.pos[0] = 0
 
     def keypress(self, event):
         if event.keyCode == K_RIGHT:
-            self.aceleration += 5
+            self.speed += self.aceleration
         elif event.keyCode == K_LEFT:
-            self.aceleration -= 5
+            self.speed -= self.aceleration
         elif event.keyCode == K_UP:
             self.speed = 0
-            self.aceleration = 0
-        elif event.keyCode == K_SPACE:
+        elif event.keyCode == K_SPACE and len(self.game.shots) < 3:
             self.game.shots.append(Shot((self.pos[0] + SHIPSIZE / 2, self.pos[1])))
         elif event.keyCode == K_ESCAPE:
             self.game.gameover()
-    
+
     def remove(self):
         document.body.removeEventListener("keydown", KEYBOARD_LISTENER)
 
 
 class Game:
-    
+
     high_score = 0
-    
+
     def __init__(self):
         self.game_over_marker = False
         self.score = 0
@@ -243,7 +238,7 @@ class Game:
         if not self.enemies and not self.scheduled_enemies:
             self.scheduled_enemies = True
             timer.set_timeout(self.populate_enemies, 2000)
-        
+
         self.display_score()
 
         if not self.game_over_marker:
@@ -260,6 +255,10 @@ class Game:
 
     def populate_enemies(self):
         quantity, speed = next(self.next_enemy_wave)
+
+        self.ship.aceleration += 1
+        self.ship.max_speed = max(self.ship.max_speed, speed + 2)
+
         enemies_per_line = 10
         x_pos = 20
         y_pos = 60
@@ -277,7 +276,7 @@ class Game:
                 y_pos += SHIPSIZE * 2
                 x_pos = 20 if odd_line == 1 else (WIDTH - 20 - SHIPSIZE)
                 print(odd_line, x_pos)
-                
+
         self.scheduled_enemies = False
 
 

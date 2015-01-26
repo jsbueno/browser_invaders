@@ -32,7 +32,7 @@ def init():
     document.body.append(SCREEN)
     CTX = SCREEN.getContext("2d")
     for image_name in "ship", "enemy_01", "enemy_02":
-        images[image_name] = html.IMG(src="/images/{}.png".format(image_name))
+        images[image_name] = html.IMG(src="images/{}.png".format(image_name))
         print("loaded {}.png".format(image_name))
 
 def gameover():

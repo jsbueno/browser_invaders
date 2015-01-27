@@ -78,15 +78,13 @@ class GameObject:
         right = left + self.rect[2]
         top = self.rect[1]
         botton = self.rect[1] + self.rect[3]
-        if ( (left >= other.rect[0] and left <= other.rect[0] + other.rect[2] or
-              right >= other.rect[0] and right <= other.rect[0] + other.rect[2] or
-              left <= other.rect[0] and right >= other.rect[0]) and
-              (top >= other.rect[1] and top <= other.rect[1] + other.rect[3] or
-               botton >= other.rect[1] and botton <= other.rect[1] + other.rect[3] or
-               top <= other.rect[1]  and botton >= other.rect[1])
-         ):
-            return True
-        return False
+        return (
+            left >= other.rect[0] and left <= other.rect[0] + other.rect[2] or
+            right >= other.rect[0] and right <= other.rect[0] + other.rect[2] or
+            left <= other.rect[0] and right >= other.rect[0]) and (
+                top >= other.rect[1] and top <= other.rect[1] + other.rect[3] or
+                botton >= other.rect[1] and botton <= other.rect[1] + other.rect[3] or
+                top <= other.rect[1]  and botton >= other.rect[1])
 
 
 class Shot(GameObject):
